@@ -1,0 +1,36 @@
+name: 获取河北电视台直播源
+
+on:
+  workflow_dispatch:  # 手动触发
+  schedule:
+    - cron: '0 8 * * *'  # 每天北京时间16点运行
+
+jobs:
+  get-m3u8:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 1. 检出代码
+      uses: actions/checkout@v3
+      
+    - name: 2. 设置Python环境
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: 3. 安装依赖
+      run: |
+        pip install requests
+        pip install beautifulsoup4
+        pip install lxml
+        
+    - name: 4. 运行抓取脚本
+      run: python get_m3u8.py
+      
+    - name: 5. 推送更新
+      run: |
+        git config --global user.email "github-actions@github.com"
+        git config --global user.name "GitHub Actions"
+        git add hebtv.m3u8
+        git commit -m "自动更新直播源 $(date '+%Y-%m-%d %H:%M')" || echo "无更改"
+        git push
